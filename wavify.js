@@ -36,7 +36,8 @@ function wavify(wave_element, options) {
     lastUpdate,
     totalTime = 0,
     animationInstance = false,
-    tweenMaxInstance = false;
+    tweenMaxInstance = false,
+    firstStart = true; // !!! firstStart for instantaneous wave width
 
   //  Allow new settings, avoid setting new container for logic purpose please :)
   //
@@ -124,13 +125,26 @@ function wavify(wave_element, options) {
       lastUpdate = now;
 
       totalTime += elapsed;
+      
+      // !!! the width of the wave becomes instantly at the first start
+      let tMISpeed = settings.speed;
+      if (firstStart) (firstStart = false), (tMISpeed = 0);
+      // !!! the width of the wave becomes instantly at the first start
 
       var factor = totalTime * Math.PI;
-      tweenMaxInstance = TweenMax.to(wave, settings.speed, {
+      tweenMaxInstance = TweenMax.to(wave, tMISpeed, {
         attr: {
           d: drawPath(drawPoints(factor))
         },
-        ease: Power1.easeInOut
+        ease: Power1.easeInOut,
+        onComplete: function() { // !!! - it is useful, even here
+          if (
+            typeof options.onComplete !== undefined &&
+            {}.toString.call(options.onComplete) === "[object Function]"
+          ) {
+            options.onComplete();
+          }
+        }
       });
     } else {
       lastUpdate = now;
